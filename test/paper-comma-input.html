@@ -1,0 +1,87 @@
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <title>paper-comma-input tests</title>
+
+  <script src="../bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
+  <script src="../bower_components/web-component-tester/browser.js"></script>
+
+  <!-- Import the element to test -->
+  <link rel="import" href="../paper-comma-input.html">
+</head>
+<body>
+
+<test-fixture id="dev">
+  <template>
+    <paper-comma-input></paper-comma-input>
+  </template>
+</test-fixture>
+
+<script>
+  suite('<paper-comma-input>', function() {
+    var el;
+
+    setup(function() {
+      el = fixture('dev');
+    });
+
+    test('when an int value is assigned the component it should render it as formatted value', function() {
+      el.value = 1000;
+      var input = Polymer.dom(el.root).querySelector('#input');
+      assert.equal(input.value, "1,000");
+      assert.equal(el.value, 1000);
+    });
+
+    test('when a formatted value is entered the component should expose it as int value', function () {
+      el.value = "1,000"; // This could be set by paper-input value <paper-input value="{{_formattedValue}}"></paper-input>
+      var input = Polymer.dom(el.root).querySelector('#input');
+      assert.equal(input.value, "1,000");
+      assert.equal(el.value, 1000);
+    });
+
+    test('when input is negative, component should expose it as negative', function() {
+      el.value = '-1,000';
+      var input = Polymer.dom(el.root).querySelector('#input');
+      assert.equal(input.value, '-1,000');
+      assert.equal(el.value, -1000);
+    });
+
+    test('when input is just -, the value should stay -, although it\'s not a number', function() { // this is used when the user writes the minus before the digits
+      var input = Polymer.dom(el.root).querySelector('#input');
+      input.value = '-';
+      assert.equal(input.value, '-');
+      assert.equal(el.value, '');
+    });
+
+    test('if comma is deleted, delete value left of the comma', function() {
+      cursorStub = sinon.stub(el, '_getCaretPosition', function() { return 3});
+
+      el.currentValue = '123,345';
+      el.value = '123345';
+      var input = Polymer.dom(el.root).querySelector('#input');
+      assert.equal(input.value, '12,345');
+      assert.equal(el.value, 12345);
+      cursorStub.restore();
+    });
+
+    test('move cursor correctly if thousand separator got added', function() {
+      cursorStub = sinon.stub(el, '_getCaretPosition', function() { return 4});
+      el.value = '1234';
+      var input = Polymer.dom(el.root).querySelector('#input');
+      assert.equal(input.selectionStart, 5)
+      cursorStub.restore();
+    });
+
+    test('move cursor correctly if thousand separator got deleted', function() {
+      cursorStub = sinon.stub(el, '_getCaretPosition', function() { return 4});
+      el.value = '1,23';
+      var input = Polymer.dom(el.root).querySelector('#input');
+      assert.equal(input.selectionStart, 3)
+      cursorStub.restore();
+    });
+  });
+</script>
+</body>
+</html>

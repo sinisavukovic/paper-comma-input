@@ -1,0 +1,251 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/iron-input/iron-input.html">
+<link rel="import" href="bower_components/iron-form-element-behavior/iron-form-element-behavior.html">
+<link rel="import" href="bower_components/paper-input/paper-input-behavior.html">
+<link rel="import" href="bower_components/paper-input/paper-input-container.html">
+<link rel="import" href="bower_components/paper-input/paper-input-error.html">
+<link rel="import" href="bower_components/paper-input/paper-input-char-counter.html">
+<link rel="import" href="bower_components/paper-input/paper-input.html">
+<dom-module id="paper-comma-input">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      input::-webkit-input-placeholder {
+        color: var(--paper-input-container-color, --secondary-text-color);
+      }
+
+      input:-moz-placeholder {
+        color: var(--paper-input-container-color, --secondary-text-color);
+      }
+
+      input::-moz-placeholder {
+        color: var(--paper-input-container-color, --secondary-text-color);
+      }
+
+      input:-ms-input-placeholder {
+        color: var(--paper-input-container-color, --secondary-text-color);
+      }
+    </style>  
+  
+    <paper-input-container no-label-float="[[noLabelFloat]]"
+                           always-float-label="[[_computeAlwaysFloatLabel(alwaysFloatLabel,placeholder)]]"
+                           auto-validate$="[[autoValidate]]" disabled$="[[disabled]]" invalid="[[invalid]]">
+      <content select="[prefix]"></content>
+      <label hidden$="[[!label]]">[[label]]</label>
+      <input is="iron-input" id="input"
+             aria-labelledby$="[[_ariaLabelledBy]]"
+             aria-describedby$="[[_ariaDescribedBy]]"
+             disabled$="[[disabled]]"
+             bind-value="{{value}}"
+             result="{{result}}"
+             invalid="{{invalid}}"
+             prevent-invalid-input="[[preventInvalidInput]]"
+             allowed-pattern="[[allowedPattern]]"
+             validator="[[validator]]"
+             type="text"
+             pattern$="[[pattern]]"
+             required$="[[required]]"
+             autocomplete$="[[autocomplete]]"
+             autofocus$="[[autofocus]]"
+             inputmode$="[[inputmode]]"
+             minlength$="[[minlength]]"
+             maxlength$="[[maxlength]]"
+             min$="[[min]]"
+             max$="[[max]]"
+             step$="[[step]]"
+             name$="[[name]]"
+             placeholder$="[[placeholder]]"
+             readonly$="[[readonly]]"
+             list$="[[list]]"
+             size$="[[size]]"
+             autocapitalize$="[[autocapitalize]]"
+             autocorrect$="[[autocorrect]]"
+             on-change="_onChange"
+             on-blur="_onBlur"
+             autosave$="[[autosave]]"
+             results$="[[results]]"
+             accept$="[[accept]]"
+             multiple$="[[multiple]]">
+      <content select="[suffix]"></content>
+      <template is="dom-if" if="[[errorMessage]]">
+        <paper-input-error>[[errorMessage]]</paper-input-error>
+      </template>
+      <template is="dom-if" if="[[charCounter]]">
+        <paper-input-char-counter></paper-input-char-counter>
+      </template>
+    </paper-input-container>
+  </template>
+</dom-module>
+<script>
+  Polymer({
+    is: 'paper-comma-input',
+    properties: {
+      value: {
+        type: String,
+        notify: true,
+        observer: '_valueChanged'
+      },
+      currentValue: {
+        type: String
+      }
+    },
+
+    behaviors: [
+      Polymer.IronFormElementBehavior,
+      Polymer.PaperInputBehavior,
+      Polymer.IronControlState
+    ],
+
+    /**
+     * Returns a reference to the input element.
+     */
+    get inputElement() {
+      return this.$.input;
+    },
+
+    _valueChanged: function(newValue, oldValue) {
+      if (!newValue || newValue === '' || newValue === oldValue) {
+        return;
+      }
+
+      newValue = newValue.toString();
+      var valueAsNumber = this._removeThousandSeparators(newValue);
+      var cursorPosition = this._getCaretPosition(this.inputElement);
+      var specialCharsBefore = this._getSpecialCharsOnSides(newValue);
+      var inputValue = this._formatNumber(valueAsNumber.replace(this._getCommaSeparator(), '.'));
+      var negative = newValue.startsWith('-');
+
+      // if deleting the comma, delete it correctly
+      if (this.currentValue === inputValue && this.currentValue === newValue.substr(0, cursorPosition) +
+          this._getThousandSeparator() + newValue.substr(cursorPosition)) {
+        inputValue = this._formatNumber(this._removeThousandSeparators(newValue.substr(0, cursorPosition - 1) +
+            newValue.substr(cursorPosition)));
+        cursorPosition--;
+      }
+
+      // if entering comma for separation, leave it in there (as well support .000)
+      var commaSeparator = this._getCommaSeparator();
+      if (newValue.endsWith(commaSeparator) ||
+          newValue.endsWith(commaSeparator + '0') ||
+          newValue.endsWith(commaSeparator + '00') ||
+          newValue.endsWith(commaSeparator + '000')) {
+        inputValue = inputValue + newValue.substring(newValue.indexOf(commaSeparator));
+      }
+
+      // move cursor correctly if thousand separator got added or removed
+      var specialCharsAfter = this._getSpecialCharsOnSides(inputValue);
+      if (specialCharsBefore[0] < specialCharsAfter[0]) {
+        cursorPosition += specialCharsAfter[0] - specialCharsBefore[0];
+      } else if (specialCharsBefore[0] > specialCharsAfter[0]) {
+        cursorPosition -= specialCharsBefore[0] - specialCharsAfter[0];
+      }
+
+      valueAsNumber = parseInt(this._removeThousandSeparators(inputValue));
+
+      if (Number.isNaN(parseInt(valueAsNumber))) {
+        this.currentValue = '';
+        this.inputElement.value = negative ? '-' : '';
+        this.value = '';
+      } else {
+        this.currentValue = inputValue;
+        this.inputElement.value = inputValue; //we need to set input like this, otherwise we would be stuck in the loop
+        this.value = valueAsNumber;
+      }
+
+      this._setCaretPosition(this.inputElement, cursorPosition);
+    },
+
+    _onBlur: function(event) {
+      // In the Shadow DOM, the `blur` event is not leaked into the
+      // ancestor tree, so we must do this manually.
+      // See https://w3c.github.io/webcomponents/spec/shadow/#events-that-are-not-leaked-into-ancestor-trees.
+      if (this.shadowRoot) {
+        this.fire(event.type, {sourceEvent: event}, {
+          node: this,
+          bubbles: event.bubbles,
+          cancelable: event.cancelable
+        });
+      }
+    },
+
+    _getSpecialCharsOnSides: function(value, cursorPosition) {
+      var specialCharsLeft = value.substring(0, cursorPosition).replace(/[0-9]/g, '').length;
+      var specialCharsRight = value.substring(cursorPosition).replace(/[0-9]/g, '').length;
+      return [specialCharsLeft, specialCharsRight];
+    },
+
+    _removeThousandSeparators: function(value) {
+      return value.replace(new RegExp(this._escapeRegExp(this._getThousandSeparator()), 'g'), '');
+    },
+
+    /* From: http://stackoverflow.com/a/6969486/496992 */
+    _escapeRegExp: function(string) {
+      return string.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&');
+    },
+
+    _getThousandSeparator: function() {
+      return this._getNumberFormat().format('1000').replace(/[0-9]/g, '')[0];
+    },
+
+    _getCommaSeparator: function() {
+      return this._getNumberFormat().format('0.01').replace(/[0-9]/g, '')[0];
+    },
+
+    _getNumberFormat: function() {
+      return new Intl.NumberFormat();
+    },
+
+    _formatNumber: function(value) {
+      return this._getNumberFormat().format(value);
+    },
+
+    /*
+     * Returns the caret (cursor) position of the specified text field.
+     * Return value range is 0-input.value.length.
+     * From: http://stackoverflow.com/a/2897229/496992
+     */
+    _getCaretPosition: function(input) {
+      var caretPosition = 0;
+
+      // IE Support
+      if (document.selection) {
+        // Set focus on the element
+        input.focus();
+
+        // To get cursor position, get empty selection range
+        var selection = document.selection.createRange();
+
+        // Move selection start to 0 position
+        selection.moveStart('character', -input.value.length);
+
+        // The caret position is selection length
+        caretPosition = selection.text.length;
+      }
+
+      // Firefox support
+      if (input.selectionStart || input.selectionStart === '0') {
+        caretPosition = input.selectionStart;
+      }
+
+      return caretPosition;
+    },
+
+    /* From: http://stackoverflow.com/a/512542/496992 */
+    _setCaretPosition: function(element, caretPosition) {
+      if (element !== null) {
+        if (element.createTextRange) {
+          var range = element.createTextRange();
+          range.move('character', caretPosition);
+          range.select();
+        } else {
+          if (element.selectionStart) {
+            element.setSelectionRange(caretPosition, caretPosition);
+          }
+        }
+      }
+    }
+  });
+</script>
