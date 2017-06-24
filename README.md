@@ -16,7 +16,7 @@
 ```
 -->
 ```html
-<paper-input value="1000"></paper-input>
+<paper-comma-input value="1000"></paper-comma-input>
 ```
 
 ## Install
@@ -26,8 +26,6 @@ Install the component using [Bower](http://bower.io/):
 ```sh
 $ bower install paper-comma-input --save
 ```
-
-Or [download as ZIP](https://github.com/paper-comma-input/paper-comma-input/archive/master.zip).
 
 ## Usage
 

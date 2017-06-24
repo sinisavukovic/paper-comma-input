@@ -12,8 +12,7 @@
     "start": "polymer serve -o",
     "postinstall": "bower i",
     "test": "polymer test",
-    "lint": "polymer lint paper-comma-input.html && eslint paper-comma-input.html",
-    "publish-docs": "./publish-docs.sh"
+    "lint": "polymer lint paper-comma-input.html && eslint paper-comma-input.html"
   },
   "devDependencies": {
     "eslint": "^3.11.0",
