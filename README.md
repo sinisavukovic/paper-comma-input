@@ -5,12 +5,11 @@
 
 `<paper-comma-input>` is a material design text field which automatically adds comma to separate out the digits.
 
-<!---
+<!--
 ```
 <custom-element-demo>
   <template>
-    <script src="../webcomponentsjs/webcomponents-lite.js"></script>
-    <link rel="import" href="paper-comma-nput.html">
+    <link rel="import" href="paper-comma-input.html">
     <next-code-block></next-code-block>
   </template>
 </custom-element-demo>
