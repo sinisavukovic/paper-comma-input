@@ -1,7 +1,7 @@
 {
   "name": "paper-comma-input",
   "description": "Material design text field which automatically adds comma to separate out the digits.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Sinisa Vukovic <sinisasu@gmail.com>",
   "license": "MIT",
   "repository": {
