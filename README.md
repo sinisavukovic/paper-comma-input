@@ -1,5 +1,5 @@
 [![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://www.webcomponents.org/element/sinisavukovic/paper-comma-input)
-
+[![Build Status](https://travis-ci.org/sinisavukovic/paper-comma-input.svg?branch=master)](https://travis-ci.org/sinisavukovic/paper-comma-input)
 
 ## &lt;paper-comma-input&gt;
 
@@ -16,7 +16,7 @@
 ```
 -->
 ```html
-<paper-input value="1000"></paper-input>
+<paper-comma-input value="1000"></paper-comma-input>
 ```
 
 ## Install
@@ -26,8 +26,6 @@ Install the component using [Bower](http://bower.io/):
 ```sh
 $ bower install paper-comma-input --save
 ```
-
-Or [download as ZIP](https://github.com/paper-comma-input/paper-comma-input/archive/master.zip).
 
 ## Usage
 

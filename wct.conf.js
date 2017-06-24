@@ -17,7 +17,7 @@ var ret = {
     },
     'plugins': {
         'local': {
-            'browsers': ['chrome']
+            'browsers': ['chrome', 'firefox']
         },
         'sauce': {
             'disabled': true

@@ -1,0 +1,13 @@
+{
+  "language": "node_js",
+  "sudo": "required",
+  "dist": "trusty",
+  "node_js": "stable",
+  "before_script": [
+    "npm install -g bower polymer-cli",
+    "bower install"
+  ],
+  "script": "npm run-script test",
+  "group": "stable",
+  "os": "linux"
+}
